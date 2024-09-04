@@ -3,12 +3,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
+    const searchBar = document.getElementById("search-bar");
+    const historyElement = document.getElementById("history");
+    const addToListButton = document.getElementById("add-to-list");
+    const productNameInput = document.getElementById("product-name");
 
     let lastScannedBarcode = "";
     let lastScanTime = 0;
     const cooldownPeriod = 3000; // 3 seconds cooldown
 
-    // Ensure the Html5Qrcode object is available
     if (typeof Html5Qrcode === "undefined") {
         console.error("Html5Qrcode library not loaded.");
         resultElement.innerText = "Error: Html5Qrcode library not loaded.";
@@ -25,16 +28,14 @@ document.addEventListener("DOMContentLoaded", function() {
         lastScannedBarcode = decodedText;
         lastScanTime = now;
 
-        // Process the barcode if it's 22 digits long
         let processedBarcode = decodedText;
         if (decodedText.length === 22) {
             processedBarcode = decodedText.substring(2, decodedText.length - 7);
         }
 
-        // Display the processed barcode and fetch product details
         resultElement.innerText = "Barcode found: " + processedBarcode;
         fetchProductDetails(processedBarcode);
-        
+
         overlay.style.display = 'none'; // Hide the overlay
     }
 
@@ -51,10 +52,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (data.status === 1) {
                     const product = data.product;
                     const productName = product.product_name || "Unknown Product";
-                    const imageUrl = product.image_url || "https://via.placeholder.com/150"; // Fallback if no image
+                    const imageUrl = product.image_url || "https://via.placeholder.com/150";
                     addProductToList(barcode, productName, imageUrl);
+                    saveToHistory(barcode, productName, imageUrl);
                 } else {
-                    resultElement.innerText = "Product not found in ADissapointmentCL's Database!.";
+                    resultElement.innerText = "Product not found in ADissapointmentCL's Database!";
                 }
             })
             .catch(error => {
@@ -78,14 +80,63 @@ document.addEventListener("DOMContentLoaded", function() {
         listElement.appendChild(listItem);
     }
 
-    // Start the scanner with environment-facing camera
+    function saveToHistory(barcode, productName, imageUrl) {
+        const history = JSON.parse(localStorage.getItem('history')) || [];
+        history.push({ barcode, productName, imageUrl });
+        localStorage.setItem('history', JSON.stringify(history));
+        displayHistory();
+    }
+
+    function displayHistory() {
+        historyElement.innerHTML = '';
+        const history = JSON.parse(localStorage.getItem('history')) || [];
+        history.forEach(item => {
+            const historyItem = document.createElement("li");
+            const image = document.createElement("img");
+            image.src = item.imageUrl;
+            image.alt = item.productName;
+            image.title = item.productName;
+            
+            const text = document.createElement("span");
+            text.textContent = `Barcode: ${item.barcode}, Product: ${item.productName}`;
+            
+            historyItem.appendChild(image);
+            historyItem.appendChild(text);
+            historyElement.appendChild(historyItem);
+        });
+    }
+
+    function searchProducts() {
+        const query = searchBar.value.toLowerCase();
+        const items = document.querySelectorAll('#list li');
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+
+    searchBar.addEventListener('input', searchProducts);
+
+    addToListButton.addEventListener('click', function() {
+        const productName = productNameInput.value.trim();
+        if (productName) {
+            // Add to list directly (assuming a mock barcode for demonstration)
+            addProductToList('0000000000000000000000', productName, 'https://via.placeholder.com/150');
+            saveToHistory('0000000000000000000000', productName, 'https://via.placeholder.com/150');
+            productNameInput.value = '';
+        }
+    });
+
     html5QrCode.start(
-        { facingMode: "environment" }, // Use environment camera
-        { fps: 10, qrbox: { width: 250, height: 250 } }, // Adjust qrbox size
-        onScanSuccess, // Success callback
-        onScanError // Error callback
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onScanSuccess,
+        onScanError
     ).catch(err => {
         console.error("Failed to start scanning", err);
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
+
+    // Initial call to display history
+    displayHistory();
 });
