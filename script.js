@@ -7,18 +7,42 @@ document.addEventListener("DOMContentLoaded", function() {
     const historyElement = document.getElementById("history");
     const addToListButton = document.getElementById("add-to-list");
     const productNameInput = document.getElementById("product-name");
+    const onlineCountElement = document.getElementById("online-count");
+    const chatMessagesElement = document.getElementById("chat-messages");
+    const chatInput = document.getElementById("chat-input");
+    const chatSendButton = document.getElementById("chat-send");
 
     let lastScannedBarcode = "";
     let lastScanTime = 0;
     const cooldownPeriod = 3000; // 3 seconds cooldown
 
-    if (typeof Html5Qrcode === "undefined") {
-        console.error("Html5Qrcode library not loaded.");
-        resultElement.innerText = "Error: Html5Qrcode library not loaded.";
-        return;
-    }
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-    const html5QrCode = new Html5Qrcode("scanner-container");
+    const db = firebase.database();
+    const chatMessagesRef = db.ref('chatMessages');
+    const onlineUsersRef = db.ref('onlineUsers');
+
+    // Track online users
+    const userId = Date.now(); // Unique ID for this user session
+    onlineUsersRef.child(userId).set(true);
+    onlineUsersRef.on('value', snapshot => {
+        const onlineUsers = snapshot.numChildren();
+        onlineCountElement.innerText = onlineUsers;
+    });
+
+    window.addEventListener('beforeunload', () => {
+        onlineUsersRef.child(userId).remove();
+    });
 
     function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
@@ -56,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     addProductToList(barcode, productName, imageUrl);
                     saveToHistory(barcode, productName, imageUrl);
                 } else {
-                    resultElement.innerText = "Product not found in ADissapointmentCL's Database!";
+                    resultElement.innerText = "Product not found in the database!";
                 }
             })
             .catch(error => {
@@ -115,6 +139,25 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            const timestamp = new Date().toISOString();
+            chatMessagesRef.push({ message, timestamp });
+            chatInput.value = '';
+        }
+    }
+
+    function displayChatMessages() {
+        chatMessagesRef.on('child_added', snapshot => {
+            const messageData = snapshot.val();
+            const messageItem = document.createElement("li");
+            messageItem.textContent = `[${new Date(messageData.timestamp).toLocaleTimeString()}] ${messageData.message}`;
+            chatMessagesElement.appendChild(messageItem);
+            chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+        });
+    }
+
     searchBar.addEventListener('input', searchProducts);
 
     addToListButton.addEventListener('click', function() {
@@ -124,6 +167,13 @@ document.addEventListener("DOMContentLoaded", function() {
             addProductToList('0000000000000000000000', productName, 'https://via.placeholder.com/150');
             saveToHistory('0000000000000000000000', productName, 'https://via.placeholder.com/150');
             productNameInput.value = '';
+        }
+    });
+
+    chatSendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
         }
     });
 
@@ -137,6 +187,7 @@ document.addEventListener("DOMContentLoaded", function() {
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 
-    // Initial call to display history
+    // Initial call to display history and chat messages
     displayHistory();
+    displayChatMessages();
 });
