@@ -14,10 +14,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function onScanSuccess(decodedText, decodedResult) {
         resultElement.innerText = "Barcode found: " + decodedText;
-        overlay.style.display = 'none'; // Hide the overlay
-        html5QrCode.stop().catch(err => {
-            console.error("Failed to stop scanning", err);
-        });
+        // Overlay not needed now, so can be hidden
+        overlay.style.display = 'none';
     }
 
     function onScanError(errorMessage) {
@@ -34,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function() {
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 
-    // Show the overlay when scanning
+    // Optionally show overlay during scanning
     html5QrCode.onScanClick = () => {
         overlay.style.display = 'block';
     };
