@@ -37,6 +37,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 5px;
         }
 
         button:hover {
@@ -59,11 +60,18 @@
             display: none;
         }
 
-        #closeButton {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+        #closeButton, #switchButton {
+            margin-top: 10px;
+            display: block;
+            width: 150px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #resultMessage {
+            margin-top: 10px;
+            font-size: 18px;
+            color: red;
         }
     </style>
 </head>
@@ -71,41 +79,99 @@
     <div class="container">
         <h1>Barcode Scanner</h1>
         <button id="scanButton">Scan Barcode</button>
+        <button id="switchButton" class="hidden">Switch Camera</button>
         <div id="cameraContainer" class="hidden">
             <video id="video" autoplay></video>
             <button id="closeButton">Close Camera</button>
         </div>
+        <div id="resultMessage" class="hidden"></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
     <script>
-        document.getElementById('scanButton').addEventListener('click', async function() {
-            const cameraContainer = document.getElementById('cameraContainer');
+        const barcodeDirectory = ["1234567890", "0987654321", "1112131415"]; // Example barcode directory
+        let currentStream = null;
+        let useFrontCamera = false;
+
+        async function startCamera() {
             const video = document.getElementById('video');
 
-            // Show camera container
-            cameraContainer.classList.remove('hidden');
+            // Stop any existing video stream
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: useFrontCamera ? "user" : "environment"
+                    }
+                });
                 video.srcObject = stream;
+                currentStream = stream;
+                scanBarcode();
             } catch (error) {
                 console.error('Error accessing the camera: ', error);
             }
+        }
+
+        function scanBarcode() {
+            const video = document.getElementById('video');
+            const resultMessage = document.getElementById('resultMessage');
+
+            video.addEventListener('playing', () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                function scan() {
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+                        if (code) {
+                            const scannedCode = code.data;
+                            resultMessage.classList.remove('hidden');
+                            if (barcodeDirectory.includes(scannedCode)) {
+                                resultMessage.textContent = "Successful";
+                                resultMessage.style.color = "green";
+                            } else {
+                                resultMessage.textContent = "Barcode Not Recognized";
+                                resultMessage.style.color = "red";
+                            }
+                        } else {
+                            requestAnimationFrame(scan);
+                        }
+                    }
+                }
+                scan();
+            });
+        }
+
+        document.getElementById('scanButton').addEventListener('click', function() {
+            document.getElementById('cameraContainer').classList.remove('hidden');
+            document.getElementById('switchButton').classList.remove('hidden');
+            startCamera();
+        });
+
+        document.getElementById('switchButton').addEventListener('click', function() {
+            useFrontCamera = !useFrontCamera;
+            startCamera();
         });
 
         document.getElementById('closeButton').addEventListener('click', function() {
-            const cameraContainer = document.getElementById('cameraContainer');
+            document.getElementById('cameraContainer').classList.add('hidden');
+            document.getElementById('switchButton').classList.add('hidden');
             const video = document.getElementById('video');
-
-            // Hide camera container
-            cameraContainer.classList.add('hidden');
-
-            // Stop video stream
-            if (video.srcObject) {
-                const stream = video.srcObject;
-                const tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
+            const resultMessage = document.getElementById('resultMessage');
+            
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
             }
+            resultMessage.classList.add('hidden');
         });
     </script>
 </body>
