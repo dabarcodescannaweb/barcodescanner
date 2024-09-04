@@ -2,7 +2,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const resultElement = document.getElementById("result");
 
-    // Create an instance of the Html5QrcodeScanner
+    // Check if the Html5Qrcode object is available
+    if (typeof Html5Qrcode === "undefined") {
+        console.error("Html5Qrcode library not loaded.");
+        resultElement.innerText = "Error: Html5Qrcode library not loaded.";
+        return;
+    }
+
     const html5QrCode = new Html5Qrcode("scanner-container");
 
     // Define success callback
@@ -15,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Define error callback
     function onScanError(errorMessage) {
-        // Handle scan error if needed
+        console.error("Scanning error:", errorMessage);
     }
 
     // Start the scanner
@@ -26,6 +32,6 @@ document.addEventListener("DOMContentLoaded", function() {
         onScanError // Error callback
     ).catch(err => {
         console.error("Failed to start scanning", err);
+        resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 });
- 
