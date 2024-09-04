@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", function() {
         // Basic Product Info (shown initially)
         const basicInfo = document.createElement("div");
         basicInfo.innerHTML = `
-            <img src="${product.image_url}" alt="${product.product_name}">
-            <span>Product: ${product.product_name}</span><br>
+            <img src="${product.image_url || 'https://via.placeholder.com/60'}" alt="${product.product_name}">
+            <span>Product: ${product.product_name || 'N/A'}</span><br>
             <span>Barcode: ${barcode}</span>
         `;
         
@@ -37,14 +37,14 @@ document.addEventListener("DOMContentLoaded", function() {
         details.className = "details";
         details.innerHTML = `
             <strong>Nutritional Info:</strong><br>
-            Calories: ${product.nutriments.energy_value} kcal<br>
-            Fats: ${product.nutriments.fat} g<br>
-            Sugars: ${product.nutriments.sugars} g<br>
-            Protein: ${product.nutriments.proteins} g<br>
-            Fiber: ${product.nutriments.fiber} g<br>
-            Salt: ${product.nutriments.salt} g<br><br>
+            Calories: ${product.nutriments?.energy_value || 'N/A'} kcal<br>
+            Fats: ${product.nutriments?.fat || 'N/A'} g<br>
+            Sugars: ${product.nutriments?.sugars || 'N/A'} g<br>
+            Protein: ${product.nutriments?.proteins || 'N/A'} g<br>
+            Fiber: ${product.nutriments?.fiber || 'N/A'} g<br>
+            Salt: ${product.nutriments?.salt || 'N/A'} g<br><br>
             <strong>Ingredients:</strong> ${product.ingredients_text || 'N/A'}<br>
-            <strong>Allergens:</strong> ${product.allergens_tags.length > 0 ? product.allergens_tags.join(', ') : 'None'}<br>
+            <strong>Allergens:</strong> ${product.allergens_tags?.length > 0 ? product.allergens_tags.join(', ') : 'None'}<br>
             <strong>Nutri-Score:</strong> ${product.nutrition_grades_tags || 'N/A'}<br>
             <strong>Eco-Score:</strong> ${product.ecoscore_grade || 'N/A'}<br>
         `;
