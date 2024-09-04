@@ -71,7 +71,6 @@
         #resultMessage {
             margin-top: 10px;
             font-size: 18px;
-            color: red;
         }
     </style>
 </head>
@@ -82,7 +81,7 @@
         <button id="switchButton" class="hidden">Switch Camera</button>
         <div id="cameraContainer" class="hidden">
             <video id="video" autoplay></video>
-            <button id="closeButton">Close Camera</button>
+            <button id="closeButton" class="hidden">Close Camera</button>
         </div>
         <div id="resultMessage" class="hidden"></div>
     </div>
@@ -117,6 +116,19 @@
             }
         }
 
+        function stopCamera() {
+            const video = document.getElementById('video');
+            const resultMessage = document.getElementById('resultMessage');
+
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            document.getElementById('cameraContainer').classList.add('hidden');
+            document.getElementById('switchButton').classList.add('hidden');
+            resultMessage.classList.remove('hidden');
+        }
+
         function scanBarcode() {
             const video = document.getElementById('video');
             const resultMessage = document.getElementById('resultMessage');
@@ -136,7 +148,6 @@
 
                         if (code) {
                             const scannedCode = code.data;
-                            resultMessage.classList.remove('hidden');
                             if (barcodeDirectory.includes(scannedCode)) {
                                 resultMessage.textContent = "Successful";
                                 resultMessage.style.color = "green";
@@ -144,6 +155,7 @@
                                 resultMessage.textContent = "Barcode Not Recognized";
                                 resultMessage.style.color = "red";
                             }
+                            stopCamera(); // Close camera after scanning
                         } else {
                             requestAnimationFrame(scan);
                         }
@@ -156,6 +168,7 @@
         document.getElementById('scanButton').addEventListener('click', function() {
             document.getElementById('cameraContainer').classList.remove('hidden');
             document.getElementById('switchButton').classList.remove('hidden');
+            document.getElementById('resultMessage').classList.add('hidden');
             startCamera();
         });
 
@@ -165,16 +178,7 @@
         });
 
         document.getElementById('closeButton').addEventListener('click', function() {
-            document.getElementById('cameraContainer').classList.add('hidden');
-            document.getElementById('switchButton').classList.add('hidden');
-            const video = document.getElementById('video');
-            const resultMessage = document.getElementById('resultMessage');
-            
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-            resultMessage.classList.add('hidden');
+            stopCamera();
         });
     </script>
 </body>
