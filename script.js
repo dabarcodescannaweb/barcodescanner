@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     const imageUrl = product.image_url || "https://via.placeholder.com/150"; // Fallback if no image
                     addProductToList(barcode, productName, imageUrl);
                 } else {
-                    resultElement.innerText = "Product not found in Open Food Facts.";
+                    resultElement.innerText = "Product not found in ADissapointmentCL's Database!.";
                 }
             })
             .catch(error => {
