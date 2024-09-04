@@ -7,91 +7,42 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
         }
 
         .container {
             text-align: center;
             background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
+        #scanner-container {
+            margin: 20px 0;
+            height: 300px;
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            color: white;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin: 5px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        #cameraContainer {
-            margin-top: 20px;
-            position: relative;
-            display: inline-block;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 10px;
-            background: #000;
-        }
-
-        #video {
-            width: 300px; /* Fixed width */
-            height: 300px; /* Fixed height */
-            border-radius: 5px;
-            background: black; /* Ensure it's visible */
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        #closeButton, #switchButton {
-            margin-top: 10px;
-            display: block;
-            width: 150px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        #resultMessage {
-            margin-top: 10px;
+        #result {
             font-size: 18px;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Barcode Scanner</h1>
-        <button id="scanButton">Scan Barcode</button>
-        <button id="switchButton" class="hidden">Switch Camera</button>
-        <div id="cameraContainer" class="hidden">
-            <video id="video" autoplay></video>
-            <button id="closeButton">Close Camera</button>
-        </div>
-        <div id="resultMessage" class="hidden"></div>
+        <div id="scanner-container"></div>
+        <div id="result">Scan a barcode to see the result</div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
