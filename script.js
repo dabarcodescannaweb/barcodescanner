@@ -1,95 +1,23 @@
-// Define the barcode directory
-const barcodeDirectory = ["1234567890", "0987654321", "1112131415"]; // Example barcode directory
+document.addEventListener("DOMContentLoaded", function() {
+    const qrCodeScanner = new Html5Qrcode("scanner-container");
 
-let currentStream = null;
-let useFrontCamera = false;
-
-async function startCamera() {
-    const video = document.getElementById('video');
-
-    // Stop any existing video stream
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: useFrontCamera ? "user" : "environment",
-                width: { ideal: 300 },  // Set video width
-                height: { ideal: 300 }  // Set video height
-            }
+    function onScanSuccess(decodedText, decodedResult) {
+        document.getElementById("result").innerText = "Barcode found: " + decodedText;
+        qrCodeScanner.stop().catch(err => {
+            console.error("Failed to stop scanning", err);
         });
-        video.srcObject = stream;
-        currentStream = stream;
-        scanBarcode();
-    } catch (error) {
-        console.error('Error accessing the camera: ', error);
     }
-}
 
-function stopCamera() {
-    const video = document.getElementById('video');
-    const resultMessage = document.getElementById('resultMessage');
-
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
+    function onScanError(errorMessage) {
+        // Handle scan error
     }
-    document.getElementById('cameraContainer').classList.add('hidden');
-    document.getElementById('switchButton').classList.add('hidden');
-    resultMessage.classList.remove('hidden');
-}
 
-function scanBarcode() {
-    const video = document.getElementById('video');
-    const resultMessage = document.getElementById('resultMessage');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    video.addEventListener('playing', () => {
-        function scan() {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-                if (code) {
-                    const scannedCode = code.data;
-                    console.log("Scanned Code:", scannedCode); // Debugging: log scanned code
-
-                    if (barcodeDirectory.includes(scannedCode)) {
-                        resultMessage.textContent = "Barcode Found";
-                        resultMessage.style.color = "green";
-                    } else {
-                        resultMessage.textContent = "Barcode Not Recognized";
-                        resultMessage.style.color = "red";
-                    }
-                    stopCamera(); // Close camera after scanning
-                } else {
-                    requestAnimationFrame(scan);
-                }
-            }
-        }
-        scan();
+    qrCodeScanner.start(
+        { facingMode: "environment" }, // or { facingMode: { exact: "environment" } }
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        onScanError
+    ).catch(err => {
+        console.error("Failed to start scanning", err);
     });
-}
-
-document.getElementById('scanButton').addEventListener('click', function() {
-    document.getElementById('cameraContainer').classList.remove('hidden');
-    document.getElementById('switchButton').classList.remove('hidden');
-    document.getElementById('resultMessage').classList.add('hidden');
-    startCamera();
-});
-
-document.getElementById('switchButton').addEventListener('click', function() {
-    useFrontCamera = !useFrontCamera;
-    startCamera();
-});
-
-document.getElementById('closeButton').addEventListener('click', function() {
-    stopCamera();
 });
