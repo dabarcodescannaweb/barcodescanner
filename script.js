@@ -25,9 +25,15 @@ document.addEventListener("DOMContentLoaded", function() {
         lastScannedBarcode = decodedText;
         lastScanTime = now;
 
-        // Display the scanned barcode and fetch product details from Open Food Facts
-        resultElement.innerText = "Barcode found: " + decodedText;
-        fetchProductDetails(decodedText);
+        // Process the barcode if it's 22 digits long
+        let processedBarcode = decodedText;
+        if (decodedText.length === 22) {
+            processedBarcode = decodedText.substring(2, decodedText.length - 7);
+        }
+
+        // Display the processed barcode and fetch product details
+        resultElement.innerText = "Barcode found: " + processedBarcode;
+        fetchProductDetails(processedBarcode);
         
         overlay.style.display = 'none'; // Hide the overlay
     }
