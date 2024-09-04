@@ -1,5 +1,5 @@
 // Define the barcode directory
-const barcodeDirectory = ["5449000004864", "3017620422003", "5449000214911"]; // Example barcode directory
+const barcodeDirectory = ["1234567890", "0987654321", "1112131415"]; // Example barcode directory
 
 let currentStream = null;
 let useFrontCamera = false;
@@ -62,7 +62,7 @@ function scanBarcode() {
                     console.log("Scanned Code:", scannedCode); // Debugging: log scanned code
 
                     if (barcodeDirectory.includes(scannedCode)) {
-                        resultMessage.textContent = "Successful";
+                        resultMessage.textContent = "Barcode Found";
                         resultMessage.style.color = "green";
                     } else {
                         resultMessage.textContent = "Barcode Not Recognized";
