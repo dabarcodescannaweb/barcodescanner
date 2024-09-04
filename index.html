@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Scanner</title>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-title" content="Barcode Scanner">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,7 +11,7 @@
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
         }
@@ -29,6 +24,14 @@
             padding: 20px;
             width: 400px;
             position: relative;
+        }
+
+        #scanner-container, #search-container {
+            display: none;
+        }
+
+        .active {
+            display: block;
         }
 
         #scanner-container {
@@ -170,28 +173,59 @@
             margin-right: 10px;
             border-radius: 8px;
         }
+
+        .nav-buttons {
+            margin: 20px;
+            text-align: center;
+        }
+
+        .nav-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .nav-buttons button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Barcode Scanner</h1>
-        <div id="scanner-container">
+        <div class="nav-buttons">
+            <button id="scanner-btn">Barcode Scanner</button>
+            <button id="search-btn">Find a Barcode</button>
+        </div>
+
+        <!-- Barcode Scanner Section -->
+        <div id="scanner-container" class="active">
             <div class="overlay" id="overlay"></div>
+            <h1>Barcode Scanner</h1>
+            <div id="result">Scan a barcode to see the result</div>
+            <div class="input-container">
+                <input type="text" id="product-name" placeholder="Enter product name">
+                <button id="add-to-list">Add to List</button>
+            </div>
+            <ul id="list"></ul>
+            <h2>Product History</h2>
+            <ul id="history"></ul>
         </div>
-        <div id="result">Scan a barcode to see the result</div>
-        <input type="text" id="search-bar" placeholder="Search products in list">
-        <input type="text" id="product-search-bar" placeholder="Search products by name">
-        <select id="filter-dropdown">
-            <option value="">Filter by shop</option>
-            <!-- Add options dynamically -->
-        </select>
-        <div class="input-container">
-            <input type="text" id="product-name" placeholder="Enter product name">
-            <button id="add-to-list">Add to List</button>
+
+        <!-- Product Finder Section -->
+        <div id="search-container">
+            <h1>Find a Product</h1>
+            <input type="text" id="product-search-bar" placeholder="Search products by name">
+            <select id="filter-dropdown">
+                <option value="">Filter by shop</option>
+                <!-- Add options dynamically -->
+            </select>
+            <ul id="search-results"></ul>
         </div>
-        <ul id="list"></ul>
-        <h2>Product History</h2>
-        <ul id="history"></ul>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="script.js"></script>
