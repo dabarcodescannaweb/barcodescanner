@@ -83,6 +83,7 @@
             display: flex;
             align-items: center;
             max-width: 380px;
+            position: relative;
         }
 
         #list li img {
@@ -120,6 +121,46 @@
         .input-container button:hover {
             background-color: #45a049;
         }
+
+        #search-bar {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 80%;
+            font-size: 16px;
+        }
+
+        #history {
+            margin-top: 30px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0;
+            list-style-type: none;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        #history li {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            max-width: 380px;
+            position: relative;
+        }
+
+        #history li img {
+            max-height: 50px;
+            margin-right: 10px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -129,11 +170,14 @@
             <div class="overlay" id="overlay"></div>
         </div>
         <div id="result">Scan a barcode to see the result</div>
+        <input type="text" id="search-bar" placeholder="Search products">
         <div class="input-container">
             <input type="text" id="product-name" placeholder="Enter product name">
             <button id="add-to-list">Add to List</button>
         </div>
         <ul id="list"></ul>
+        <h2>Product History</h2>
+        <ul id="history"></ul>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="script.js"></script>
