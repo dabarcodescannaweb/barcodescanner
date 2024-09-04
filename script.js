@@ -1,5 +1,5 @@
 // Define the barcode directory
-const barcodeDirectory = ["5449000214911", "3017620422003", "5449000004864"]; // Example barcode directory
+const barcodeDirectory = ["5449000004864", "3017620422003", "5449000214911"]; // Example barcode directory
 
 let currentStream = null;
 let useFrontCamera = false;
@@ -44,11 +44,10 @@ function stopCamera() {
 function scanBarcode() {
     const video = document.getElementById('video');
     const resultMessage = document.getElementById('resultMessage');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
     video.addEventListener('playing', () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
         function scan() {
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 canvas.width = video.videoWidth;
