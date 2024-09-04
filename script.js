@@ -28,3 +28,4 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error("Failed to start scanning", err);
     });
 });
+ 
