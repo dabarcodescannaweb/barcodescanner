@@ -2,6 +2,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
+    const productNameInput = document.getElementById("product-name");
+    const addToListButton = document.getElementById("add-to-list");
+    const listElement = document.getElementById("list");
+
+    let lastBarcode = "";
 
     // Ensure the Html5Qrcode object is available
     if (typeof Html5Qrcode === "undefined") {
@@ -14,8 +19,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function onScanSuccess(decodedText, decodedResult) {
         resultElement.innerText = "Barcode found: " + decodedText;
-        // Overlay not needed now, so can be hidden
-        overlay.style.display = 'none';
+        lastBarcode = decodedText;
+        overlay.style.display = 'none'; // Hide the overlay
     }
 
     function onScanError(errorMessage) {
@@ -32,8 +37,17 @@ document.addEventListener("DOMContentLoaded", function() {
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 
-    // Optionally show overlay during scanning
-    html5QrCode.onScanClick = () => {
-        overlay.style.display = 'block';
-    };
+    // Handle adding scanned barcode to the list
+    addToListButton.addEventListener("click", function() {
+        const productName = productNameInput.value.trim();
+        if (lastBarcode && productName) {
+            const listItem = document.createElement("li");
+            listItem.textContent = `Barcode: ${lastBarcode}, Product: ${productName}`;
+            listElement.appendChild(listItem);
+            productNameInput.value = ""; // Clear input field
+            lastBarcode = ""; // Clear last barcode
+        } else {
+            alert("Please scan a barcode and enter a product name.");
+        }
+    });
 });
