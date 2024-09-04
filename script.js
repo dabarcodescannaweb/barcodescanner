@@ -2,11 +2,21 @@ document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
-    const productNameInput = document.getElementById("product-name");
-    const addToListButton = document.getElementById("add-to-list");
     const listElement = document.getElementById("list");
-
-    let lastBarcode = "";
+    
+    // Predefined list of barcodes and product names
+    const productList = {
+        "5449000214911": "Coca-cola - 330 ml",
+        "3017620422003": "Nutella - 400g",
+        "5449000004864": "Sprite - 2L",
+        "222334455667": "Product D",
+        "333445566778": "Product E",
+        "444556677889": "Product F",
+        "555667788990": "Product G",
+        "666778899001": "Product H",
+        "777889900112": "Product I",
+        "888990011223": "Product J"
+    };
 
     // Ensure the Html5Qrcode object is available
     if (typeof Html5Qrcode === "undefined") {
@@ -19,12 +29,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function onScanSuccess(decodedText, decodedResult) {
         resultElement.innerText = "Barcode found: " + decodedText;
-        lastBarcode = decodedText;
+        
+        if (productList[decodedText]) {
+            addProductToList(decodedText, productList[decodedText]);
+        } else {
+            resultElement.innerText = "Barcode found, but no product name associated.";
+        }
+        
         overlay.style.display = 'none'; // Hide the overlay
     }
 
     function onScanError(errorMessage) {
         console.error("Scanning error:", errorMessage);
+    }
+
+    function addProductToList(barcode, productName) {
+        const listItem = document.createElement("li");
+        listItem.textContent = `Barcode: ${barcode}, Product: ${productName}`;
+        listElement.appendChild(listItem);
     }
 
     html5QrCode.start(
@@ -37,17 +59,4 @@ document.addEventListener("DOMContentLoaded", function() {
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 
-    // Handle adding scanned barcode to the list
-    addToListButton.addEventListener("click", function() {
-        const productName = productNameInput.value.trim();
-        if (lastBarcode && productName) {
-            const listItem = document.createElement("li");
-            listItem.textContent = `Barcode: ${lastBarcode}, Product: ${productName}`;
-            listElement.appendChild(listItem);
-            productNameInput.value = ""; // Clear input field
-            lastBarcode = ""; // Clear last barcode
-        } else {
-            alert("Please scan a barcode and enter a product name.");
-        }
-    });
 });
