@@ -1,5 +1,5 @@
 // Define the barcode directory
-const barcodeDirectory = ["1234567890", "0987654321", "1112131415"]; // Example barcode directory
+const barcodeDirectory = ["5449000214911", "3017620422003", "5449000004864"]; // Example barcode directory
 
 let currentStream = null;
 let useFrontCamera = false;
