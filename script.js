@@ -1,136 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+document.addEventListener("DOMContentLoaded", function() {
+    const scannerContainer = document.getElementById("scanner-container");
+    const resultElement = document.getElementById("result");
+    const overlay = document.getElementById("overlay");
+    const listElement = document.getElementById("list");
+    const productNameInput = document.getElementById("product-name");
+    const addToListButton = document.getElementById("add-to-list");
 
-        .container {
-            text-align: center;
-            background: white;
-            border-radius: 12px; /* Rounded corners for the container */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Slight shadow for depth */
-            padding: 20px;
-            width: 400px; /* Increased width for larger list */
-            position: relative;
-        }
+    const productList = {
+        "123456789012": { name: "Product A", image: "images/product_a.jpg" },
+        "987654321098": { name: "Product B", image: "images/product_b.jpg" },
+        "111223344556": { name: "Product C", image: "images/product_c.jpg" },
+        "222334455667": { name: "Product D", image: "images/product_d.jpg" },
+        "333445566778": { name: "Product E", image: "images/product_e.jpg" },
+        "444556677889": { name: "Product F", image: "images/product_f.jpg" },
+        "555667788990": { name: "Product G", image: "images/product_g.jpg" },
+        "666778899001": { name: "Product H", image: "images/product_h.jpg" },
+        "777889900112": { name: "Product I", image: "images/product_i.jpg" },
+        "888990011223": { name: "Product J", image: "images/product_j.jpg" }
+    };
 
-        #scanner-container {
-            margin: 20px auto;
-            height: 240px; /* Adjust height as needed */
-            width: 100%; /* Full width of the container */
-            border: 2px solid #4CAF50; /* Green border for visibility */
-            border-radius: 12px; /* Rounded corners for scanner */
-            position: relative;
-            overflow: hidden; /* Hide overflow */
-            background-color: #fff; /* White background inside scanner */
-        }
+    let lastScannedBarcode = "";
+    let lastScanTime = 0;
+    const cooldownPeriod = 3000; // 3 seconds cooldown
 
-        #result {
-            font-size: 18px;
-            color: #333;
-            margin-top: 10px;
-        }
+    // Ensure the Html5Qrcode object is available
+    if (typeof Html5Qrcode === "undefined") {
+        console.error("Html5Qrcode library not loaded.");
+        resultElement.innerText = "Error: Html5Qrcode library not loaded.";
+        return;
+    }
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 2px solid rgba(76, 175, 80, 0.5); /* Semi-transparent green border */
-            border-radius: 12px; /* Match scanner corners */
-            pointer-events: none; /* Allow interactions through the overlay */
-            display: none; /* Hide overlay initially */
-        }
+    const html5QrCode = new Html5Qrcode("scanner-container");
 
-        #list {
-            margin-top: 20px;
-            text-align: left;
-            max-height: 400px; /* Increased height for larger list */
-            overflow-y: auto;
-            padding: 0;
-            list-style-type: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center align items */
+    function onScanSuccess(decodedText, decodedResult) {
+        const now = Date.now();
+        if (decodedText === lastScannedBarcode && (now - lastScanTime < cooldownPeriod)) {
+            return; // Ignore this scan due to cooldown
         }
+        lastScannedBarcode = decodedText;
+        lastScanTime = now;
+        
+        resultElement.innerText = "Barcode found: " + decodedText;
+        
+        const product = productList[decodedText];
+        if (product) {
+            addProductToList(decodedText, product.name, product.image);
+        } else {
+            resultElement.innerText = "Barcode found, but no product name associated.";
+        }
+        
+        overlay.style.display = 'none'; // Hide the overlay
+    }
 
-        #list li {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            padding: 15px;
-            font-size: 18px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            max-width: 380px; /* Max width to fit within container */
-        }
+    function onScanError(errorMessage) {
+        console.error("Scanning error:", errorMessage);
+    }
 
-        #list li img {
-            max-height: 60px; /* Set max height for images */
-            margin-right: 15px; /* Space between image and text */
-            border-radius: 8px;
-        }
+    function addProductToList(barcode, productName, imageUrl) {
+        const listItem = document.createElement("li");
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = productName;
+        image.title = productName;
+        
+        const text = document.createElement("span");
+        text.textContent = `Barcode: ${barcode}, Product: ${productName}`;
+        
+        listItem.appendChild(image);
+        listItem.appendChild(text);
+        listElement.appendChild(listItem);
+    }
 
-        .input-container {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    html5QrCode.start(
+        { facingMode: "environment" }, // Use environment camera
+        { fps: 10, qrbox: { width: 250, height: 250 } }, // Adjust qrbox size
+        onScanSuccess, // Success callback
+        onScanError // Error callback
+    ).catch(err => {
+        console.error("Failed to start scanning", err);
+        resultElement.innerText = "Failed to start scanning. Check console for errors.";
+    });
 
-        .input-container input[type="text"] {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            width: 80%;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .input-container button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .input-container button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Barcode Scanner</h1>
-        <div id="scanner-container">
-            <div class="overlay" id="overlay"></div>
-        </div>
-        <div id="result">Scan a barcode to see the result</div>
-        <div class="input-container">
-            <input type="text" id="product-name" placeholder="Enter product name">
-            <button id="add-to-list">Add to List</button>
-        </div>
-        <ul id="list"></ul>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+});
