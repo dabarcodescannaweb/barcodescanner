@@ -3,20 +3,26 @@ document.addEventListener("DOMContentLoaded", function() {
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
-    
-    // Predefined list of barcodes and product names
+    const productNameInput = document.getElementById("product-name");
+    const addToListButton = document.getElementById("add-to-list");
+
+    // Predefined list of barcodes and product names with image URLs
     const productList = {
-        "5449000214911": "Coca-cola - 330 ml",
-        "3017620422003": "Nutella - 400g",
-        "5449000004864": "Sprite - 2L",
-        "222334455667": "Product D",
-        "333445566778": "Product E",
-        "444556677889": "Product F",
-        "555667788990": "Product G",
-        "666778899001": "Product H",
-        "777889900112": "Product I",
-        "888990011223": "Product J"
+        "5449000214911": { name: "Coca-cola 330ml", image: "https://images.openfoodfacts.org/images/products/544/900/021/4911/front_fr.224.400.jpg" },
+        "3017620422003": { name: "Nutella - 400g", image: "https://images.openfoodfacts.org/images/products/301/762/042/2003/front_en.633.400.jpg" },
+        "5449000004864": { name: "Sprite - 2L", image: "https://images.openfoodfacts.org/images/products/544/900/000/4864/front_fr.25.400.jpg" },
+        "222334455667": { name: "Product D", image: "https://example.com/images/product_d.jpg" },
+        "333445566778": { name: "Product E", image: "https://example.com/images/product_e.jpg" },
+        "444556677889": { name: "Product F", image: "https://example.com/images/product_f.jpg" },
+        "555667788990": { name: "Product G", image: "https://example.com/images/product_g.jpg" },
+        "666778899001": { name: "Product H", image: "https://example.com/images/product_h.jpg" },
+        "777889900112": { name: "Product I", image: "https://example.com/images/product_i.jpg" },
+        "888990011223": { name: "Product J", image: "https://example.com/images/product_j.jpg" }
     };
+
+    let lastScannedBarcode = "";
+    let lastScanTime = 0;
+    const cooldownPeriod = 3000; // 3 seconds cooldown
 
     // Ensure the Html5Qrcode object is available
     if (typeof Html5Qrcode === "undefined") {
@@ -28,10 +34,18 @@ document.addEventListener("DOMContentLoaded", function() {
     const html5QrCode = new Html5Qrcode("scanner-container");
 
     function onScanSuccess(decodedText, decodedResult) {
+        const now = Date.now();
+        if (decodedText === lastScannedBarcode && (now - lastScanTime < cooldownPeriod)) {
+            return; // Ignore this scan due to cooldown
+        }
+        lastScannedBarcode = decodedText;
+        lastScanTime = now;
+        
         resultElement.innerText = "Barcode found: " + decodedText;
         
-        if (productList[decodedText]) {
-            addProductToList(decodedText, productList[decodedText]);
+        const product = productList[decodedText];
+        if (product) {
+            addProductToList(decodedText, product.name, product.image);
         } else {
             resultElement.innerText = "Barcode found, but no product name associated.";
         }
@@ -43,9 +57,18 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error("Scanning error:", errorMessage);
     }
 
-    function addProductToList(barcode, productName) {
+    function addProductToList(barcode, productName, imageUrl) {
         const listItem = document.createElement("li");
-        listItem.textContent = `Barcode: ${barcode}, Product: ${productName}`;
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = productName;
+        image.title = productName;
+        
+        const text = document.createElement("span");
+        text.textContent = `Barcode: ${barcode}, Product: ${productName}`;
+        
+        listItem.appendChild(image);
+        listItem.appendChild(text);
         listElement.appendChild(listItem);
     }
 
