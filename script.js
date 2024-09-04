@@ -1,8 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const searchContainer = document.getElementById("search-container");
-    const scannerBtn = document.getElementById("scanner-btn");
-    const searchBtn = document.getElementById("search-btn");
+    const findProductBtn = document.getElementById("find-product-btn");
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
@@ -11,7 +10,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const searchResultsElement = document.getElementById("search-results");
     const addToListButton = document.getElementById("add-to-list");
     const productNameInput = document.getElementById("product-name");
-    const historyElement = document.getElementById("history");
 
     let lastScannedBarcode = "";
     let lastScanTime = 0;
@@ -93,6 +91,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function displayHistory() {
+        const historyElement = document.createElement("ul");
+        historyElement.id = 'history-list';
+        document.querySelector('.container').appendChild(historyElement);
+
         historyElement.innerHTML = '';
         const history = JSON.parse(localStorage.getItem('history')) || [];
         history.forEach(item => {
@@ -112,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function searchProductByName() {
-        const query = searchBar.value;
+        const query = searchBar.value.trim();
         const apiUrl = `https://world.openfoodfacts.org/api/v0/search?search_terms=${query}&sort_by=popularity`;
 
         fetch(apiUrl)
@@ -155,27 +157,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const selectedShop = filterDropdown.value;
         const items = document.querySelectorAll('#search-results li');
         items.forEach(item => {
-            // Assuming you add shop info in the list items, filter based on that
             const shopInfo = item.getAttribute('data-shop') || '';
             item.style.display = selectedShop ? shopInfo.includes(selectedShop) : '';
         });
     }
 
-    scannerBtn.addEventListener('click', () => {
-        scannerContainer.classList.add('active');
-        searchContainer.classList.remove('active');
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess,
-            onScanError
-        ).catch(err => {
-            console.error("Failed to start scanning", err);
-            resultElement.innerText = "Failed to start scanning. Check console for errors.";
-        });
-    });
-
-    searchBtn.addEventListener('click', () => {
+    findProductBtn.addEventListener('click', () => {
         scannerContainer.classList.remove('active');
         searchContainer.classList.add('active');
         html5QrCode.stop();
@@ -193,17 +180,6 @@ document.addEventListener("DOMContentLoaded", function() {
     searchBar.addEventListener('input', searchProductByName);
     filterDropdown.addEventListener('change', filterProducts);
 
-    displayHistory();
-
-    // Example: Populate filter dropdown with options
-    const filterOptions = ['Supermarket A', 'Supermarket B', 'Online Store']; // Example options
-    filterOptions.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option;
-        opt.textContent = option;
-        filterDropdown.appendChild(opt);
-    });
-
     // Initialize with scanner view
-    scannerBtn.click();
+    scannerContainer.classList.add('active');
 });
