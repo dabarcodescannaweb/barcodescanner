@@ -3,22 +3,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
-    const productNameInput = document.getElementById("product-name");
-    const addToListButton = document.getElementById("add-to-list");
-
-    // Predefined list of barcodes and product names with image URLs
-    const productList = {
-        "5449000214911": { name: "Coca-cola 330ml", image: "https://images.openfoodfacts.org/images/products/544/900/021/4911/front_fr.224.400.jpg" },
-        "3017620422003": { name: "Nutella - 400g", image: "https://images.openfoodfacts.org/images/products/301/762/042/2003/front_en.633.400.jpg" },
-        "5449000004864": { name: "Sprite - 2L", image: "https://images.openfoodfacts.org/images/products/544/900/000/4864/front_fr.25.400.jpg" },
-        "222334455667": { name: "Product D", image: "https://example.com/images/product_d.jpg" },
-        "333445566778": { name: "Product E", image: "https://example.com/images/product_e.jpg" },
-        "444556677889": { name: "Product F", image: "https://example.com/images/product_f.jpg" },
-        "555667788990": { name: "Product G", image: "https://example.com/images/product_g.jpg" },
-        "666778899001": { name: "Product H", image: "https://example.com/images/product_h.jpg" },
-        "777889900112": { name: "Product I", image: "https://example.com/images/product_i.jpg" },
-        "888990011223": { name: "Product J", image: "https://example.com/images/product_j.jpg" }
-    };
 
     let lastScannedBarcode = "";
     let lastScanTime = 0;
@@ -33,21 +17,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const html5QrCode = new Html5Qrcode("scanner-container");
 
-    function onScanSuccess(decodedText, decodedResult) {
+    async function fetchProductData(barcode) {
+        const API_ENDPOINT = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+        
+        try {
+            const response = await fetch(API_ENDPOINT);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching product data:', error);
+            return null;
+        }
+    }
+
+    async function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
         if (decodedText === lastScannedBarcode && (now - lastScanTime < cooldownPeriod)) {
             return; // Ignore this scan due to cooldown
         }
         lastScannedBarcode = decodedText;
         lastScanTime = now;
-        
-        resultElement.innerText = "Barcode found: " + decodedText;
-        
-        const product = productList[decodedText];
-        if (product) {
-            addProductToList(decodedText, product.name, product.image);
+
+        resultElement.innerText = "Scanning barcode: " + decodedText;
+        const productData = await fetchProductData(decodedText);
+
+        if (productData && productData.product) {
+            const { product_name, image_url } = productData.product;
+            addProductToList(decodedText, product_name, image_url || 'https://via.placeholder.com/60');
         } else {
-            resultElement.innerText = "Barcode found, but no product name associated.";
+            resultElement.innerText = "Barcode found, but no product information available.";
         }
         
         overlay.style.display = 'none'; // Hide the overlay
