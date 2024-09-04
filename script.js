@@ -3,21 +3,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
-    const productNameInput = document.getElementById("product-name");
-    const addToListButton = document.getElementById("add-to-list");
-
-    const productList = {
-        "123456789012": { name: "Product A", image: "images/product_a.jpg" },
-        "987654321098": { name: "Product B", image: "images/product_b.jpg" },
-        "111223344556": { name: "Product C", image: "images/product_c.jpg" },
-        "222334455667": { name: "Product D", image: "images/product_d.jpg" },
-        "333445566778": { name: "Product E", image: "images/product_e.jpg" },
-        "444556677889": { name: "Product F", image: "images/product_f.jpg" },
-        "555667788990": { name: "Product G", image: "images/product_g.jpg" },
-        "666778899001": { name: "Product H", image: "images/product_h.jpg" },
-        "777889900112": { name: "Product I", image: "images/product_i.jpg" },
-        "888990011223": { name: "Product J", image: "images/product_j.jpg" }
-    };
 
     let lastScannedBarcode = "";
     let lastScanTime = 0;
@@ -39,21 +24,37 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         lastScannedBarcode = decodedText;
         lastScanTime = now;
-        
+
+        // Display the scanned barcode and fetch product details from Open Food Facts
         resultElement.innerText = "Barcode found: " + decodedText;
-        
-        const product = productList[decodedText];
-        if (product) {
-            addProductToList(decodedText, product.name, product.image);
-        } else {
-            resultElement.innerText = "Barcode found, but no product name associated.";
-        }
+        fetchProductDetails(decodedText);
         
         overlay.style.display = 'none'; // Hide the overlay
     }
 
     function onScanError(errorMessage) {
         console.error("Scanning error:", errorMessage);
+    }
+
+    function fetchProductDetails(barcode) {
+        const apiUrl = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 1) {
+                    const product = data.product;
+                    const productName = product.product_name || "Unknown Product";
+                    const imageUrl = product.image_url || "https://via.placeholder.com/150"; // Fallback if no image
+                    addProductToList(barcode, productName, imageUrl);
+                } else {
+                    resultElement.innerText = "Product not found in Open Food Facts.";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching product details:", error);
+                resultElement.innerText = "Error fetching product details.";
+            });
     }
 
     function addProductToList(barcode, productName, imageUrl) {
@@ -71,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
         listElement.appendChild(listItem);
     }
 
+    // Start the scanner with environment-facing camera
     html5QrCode.start(
         { facingMode: "environment" }, // Use environment camera
         { fps: 10, qrbox: { width: 250, height: 250 } }, // Adjust qrbox size
@@ -80,5 +82,4 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error("Failed to start scanning", err);
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
-
 });
