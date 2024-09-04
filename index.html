@@ -3,25 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Access</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        #video {
-            border: 1px solid #ddd;
-            width: 80%;
-            max-width: 600px;
-            height: auto;
-        }
-    </style>
+    <title>Barcode Scanner</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Camera Access Example</h1>
-    <button id="startButton">Start Camera</button>
-    <video id="video" autoplay></video>
+    <div class="container">
+        <h1>Barcode Scanner</h1>
+        <button id="scanButton">Scan Barcode</button>
+        <div id="cameraContainer" class="hidden">
+            <video id="video" autoplay></video>
+            <button id="closeButton">Close Camera</button>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
