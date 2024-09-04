@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
     const searchBar = document.getElementById("search-bar");
+    const productSearchBar = document.getElementById("product-search-bar");
+    const filterDropdown = document.getElementById("filter-dropdown");
     const historyElement = document.getElementById("history");
     const addToListButton = document.getElementById("add-to-list");
     const productNameInput = document.getElementById("product-name");
@@ -115,12 +117,48 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    function searchProductByName() {
+        const query = productSearchBar.value;
+        const apiUrl = `https://world.openfoodfacts.org/api/v0/search?search_terms=${query}&sort_by=popularity`;
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.products && data.products.length > 0) {
+                    listElement.innerHTML = '';
+                    data.products.forEach(product => {
+                        const barcode = product.code || 'Unknown';
+                        const productName = product.product_name || 'Unknown Product';
+                        const imageUrl = product.image_url || 'https://via.placeholder.com/150';
+                        addProductToList(barcode, productName, imageUrl);
+                    });
+                } else {
+                    resultElement.innerText = "No products found!";
+                }
+            })
+            .catch(error => {
+                console.error("Error searching for products:", error);
+                resultElement.innerText = "Error searching for products.";
+            });
+    }
+
+    function filterProducts() {
+        const selectedShop = filterDropdown.value;
+        const items = document.querySelectorAll('#list li');
+        items.forEach(item => {
+            // Assuming you add shop info in the list items, filter based on that
+            const shopInfo = item.getAttribute('data-shop') || '';
+            item.style.display = selectedShop ? shopInfo.includes(selectedShop) : '';
+        });
+    }
+
+    productSearchBar.addEventListener('input', searchProductByName);
+    filterDropdown.addEventListener('change', filterProducts);
     searchBar.addEventListener('input', searchProducts);
 
     addToListButton.addEventListener('click', function() {
         const productName = productNameInput.value.trim();
         if (productName) {
-            // Add to list directly (assuming a mock barcode for demonstration)
             addProductToList('0000000000000000000000', productName, 'https://via.placeholder.com/150');
             saveToHistory('0000000000000000000000', productName, 'https://via.placeholder.com/150');
             productNameInput.value = '';
@@ -137,6 +175,14 @@ document.addEventListener("DOMContentLoaded", function() {
         resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 
-    // Initial call to display history
     displayHistory();
+
+    // Example: Populate filter dropdown with options
+    const filterOptions = ['Supermarket A', 'Supermarket B', 'Online Store']; // Example options
+    filterOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        filterDropdown.appendChild(opt);
+    });
 });
