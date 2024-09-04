@@ -22,26 +22,43 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             padding: 20px;
-            width: 300px;
+            width: 320px;
+            position: relative;
         }
 
         #scanner-container {
-            margin: 20px 0;
-            height: 300px;
-            width: 100%;
+            margin: 20px auto;
+            height: 240px; /* Adjust height to fit better */
+            width: 100%; /* Full width of the container */
             border: 1px solid #ddd;
+            position: relative;
+            overflow: hidden; /* Hide overflow */
+            border-radius: 8px; /* Rounded corners */
         }
 
         #result {
             font-size: 18px;
             color: #333;
         }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 1px solid green; /* Example border, can be adjusted */
+            pointer-events: none; /* Ensure clicks pass through */
+            display: none; /* Hide overlay initially */
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Barcode Scanner</h1>
-        <div id="scanner-container"></div>
+        <div id="scanner-container">
+            <div class="overlay" id="overlay"></div>
+        </div>
         <div id="result">Scan a barcode to see the result</div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
