@@ -122,8 +122,17 @@
             background-color: #45a049;
         }
 
-        #search-bar {
+        #search-bar, #product-search-bar {
             margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 80%;
+            font-size: 16px;
+        }
+
+        #filter-dropdown {
+            margin-top: 10px;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -170,7 +179,12 @@
             <div class="overlay" id="overlay"></div>
         </div>
         <div id="result">Scan a barcode to see the result</div>
-        <input type="text" id="search-bar" placeholder="Search products">
+        <input type="text" id="search-bar" placeholder="Search products in list">
+        <input type="text" id="product-search-bar" placeholder="Search products by name">
+        <select id="filter-dropdown">
+            <option value="">Filter by shop</option>
+            <!-- Add options dynamically -->
+        </select>
         <div class="input-container">
             <input type="text" id="product-name" placeholder="Enter product name">
             <button id="add-to-list">Add to List</button>
@@ -181,18 +195,5 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script src="script.js"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-              console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            })
-            .catch(error => {
-              console.error('ServiceWorker registration failed: ', error);
-            });
-        });
-      }
-    </script>
 </body>
 </html>
