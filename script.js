@@ -1,78 +1,91 @@
 document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const resultElement = document.getElementById("result");
-    const overlay = document.getElementById("overlay");
     const listElement = document.getElementById("list");
 
-    let lastScannedBarcode = "";
-    let lastScanTime = 0;
-    const cooldownPeriod = 3000; // 3 seconds cooldown
-
-    // Ensure the Html5Qrcode object is available
-    if (typeof Html5Qrcode === "undefined") {
-        console.error("Html5Qrcode library not loaded.");
-        resultElement.innerText = "Error: Html5Qrcode library not loaded.";
-        return;
+    // Use Open Food Facts API to get product info based on barcode
+    async function fetchProductInfo(barcode) {
+        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        if (response.ok) {
+            const data = await response.json();
+            return data.product;
+        } else {
+            throw new Error('Product not found');
+        }
     }
 
-    const html5QrCode = new Html5Qrcode("scanner-container");
+    function addProductToList(product, barcode) {
+        const listItem = document.createElement("li");
+
+        // Basic Product Info (shown initially)
+        const basicInfo = document.createElement("div");
+        basicInfo.innerHTML = `
+            <img src="${product.image_url}" alt="${product.product_name}">
+            <span>Product: ${product.product_name}</span><br>
+            <span>Barcode: ${barcode}</span>
+        `;
+        
+        listItem.appendChild(basicInfo);
+
+        // Create the button to toggle detailed info
+        const toggleButton = document.createElement("button");
+        toggleButton.className = "toggle-details";
+        toggleButton.textContent = "Show More";
+
+        // Detailed Info (hidden initially)
+        const details = document.createElement("div");
+        details.className = "details";
+        details.innerHTML = `
+            <strong>Nutritional Info:</strong><br>
+            Calories: ${product.nutriments.energy_value} kcal<br>
+            Fats: ${product.nutriments.fat} g<br>
+            Sugars: ${product.nutriments.sugars} g<br>
+            Protein: ${product.nutriments.proteins} g<br>
+            Fiber: ${product.nutriments.fiber} g<br>
+            Salt: ${product.nutriments.salt} g<br><br>
+            <strong>Ingredients:</strong> ${product.ingredients_text || 'N/A'}<br>
+            <strong>Allergens:</strong> ${product.allergens_tags.length > 0 ? product.allergens_tags.join(', ') : 'None'}<br>
+            <strong>Nutri-Score:</strong> ${product.nutrition_grades_tags || 'N/A'}<br>
+            <strong>Eco-Score:</strong> ${product.ecoscore_grade || 'N/A'}<br>
+        `;
+
+        // Toggle button click event
+        toggleButton.addEventListener("click", function() {
+            details.style.display = details.style.display === "none" ? "block" : "none";
+            toggleButton.textContent = details.style.display === "none" ? "Show More" : "Show Less";
+        });
+
+        listItem.appendChild(toggleButton);
+        listItem.appendChild(details);
+
+        // Add the product list item to the list
+        listElement.appendChild(listItem);
+    }
 
     function onScanSuccess(decodedText, decodedResult) {
-        const now = Date.now();
-        if (decodedText === lastScannedBarcode && (now - lastScanTime < cooldownPeriod)) {
-            return; // Ignore this scan due to cooldown
-        }
-        lastScannedBarcode = decodedText;
-        lastScanTime = now;
-
-        // Display the scanned barcode and fetch product details from Open Food Facts
         resultElement.innerText = "Barcode found: " + decodedText;
-        fetchProductDetails(decodedText);
-        
-        overlay.style.display = 'none'; // Hide the overlay
+
+        // Fetch the product data from Open Food Facts
+        fetchProductInfo(decodedText)
+            .then(product => {
+                if (product) {
+                    addProductToList(product, decodedText);
+                } else {
+                    resultElement.innerText = "No product data found.";
+                }
+            })
+            .catch(error => {
+                resultElement.innerText = "Error fetching product data.";
+                console.error(error);
+            });
     }
 
     function onScanError(errorMessage) {
         console.error("Scanning error:", errorMessage);
     }
 
-    function fetchProductDetails(barcode) {
-        const apiUrl = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+    const html5QrCode = new Html5Qrcode("scanner-container");
 
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 1) {
-                    const product = data.product;
-                    const productName = product.product_name || "Unknown Product";
-                    const imageUrl = product.image_url || "https://via.placeholder.com/150"; // Fallback if no image
-                    addProductToList(barcode, productName, imageUrl);
-                } else {
-                    resultElement.innerText = "Product not found in Open Food Facts.";
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching product details:", error);
-                resultElement.innerText = "Error fetching product details.";
-            });
-    }
-
-    function addProductToList(barcode, productName, imageUrl) {
-        const listItem = document.createElement("li");
-        const image = document.createElement("img");
-        image.src = imageUrl;
-        image.alt = productName;
-        image.title = productName;
-        
-        const text = document.createElement("span");
-        text.textContent = `Barcode: ${barcode}, Product: ${productName}`;
-        
-        listItem.appendChild(image);
-        listItem.appendChild(text);
-        listElement.appendChild(listItem);
-    }
-
-    // Start the scanner with environment-facing camera
     html5QrCode.start(
         { facingMode: "environment" }, // Use environment camera
         { fps: 10, qrbox: { width: 250, height: 250 } }, // Adjust qrbox size
