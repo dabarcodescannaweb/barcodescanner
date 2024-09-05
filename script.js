@@ -2,17 +2,28 @@ document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
-    const searchIcon = document.getElementById("search-icon");
-    const searchInterface = document.getElementById("search-interface");
-    const searchResults = document.getElementById("search-results");
-    const searchQueryInput = document.getElementById("search-query");
+    const listElement = document.getElementById("list");
     const searchBar = document.getElementById("search-bar");
-    
+    const historyElement = document.getElementById("history");
+    const addToListButton = document.getElementById("add-to-list");
+    const productNameInput = document.getElementById("product-name");
+
     let lastScannedBarcode = "";
     let lastScanTime = 0;
     const cooldownPeriod = 3000; // 3 seconds cooldown
 
-    const html5QrCode = new Html5Qrcode("scanner-container");
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
     function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
@@ -47,9 +58,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     const product = data.product;
                     const productName = product.product_name || "Unknown Product";
                     const imageUrl = product.image_url || "https://via.placeholder.com/150";
-                    addSearchResult(barcode, productName, imageUrl);
+                    addProductToList(barcode, productName, imageUrl);
+                    saveToHistory(barcode, productName, imageUrl);
                 } else {
-                    resultElement.innerText = "Product not found!";
+                    resultElement.innerText = "Product not found in ADissapointmentCL's Database!";
                 }
             })
             .catch(error => {
@@ -58,59 +70,61 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     }
 
-    function addSearchResult(barcode, productName, imageUrl) {
-        const resultItem = document.createElement("li");
+    function addProductToList(barcode, productName, imageUrl) {
+        const listItem = document.createElement("li");
         const image = document.createElement("img");
         image.src = imageUrl;
         image.alt = productName;
+        image.title = productName;
         
         const text = document.createElement("span");
-        text.textContent = `${productName} (Barcode: ${barcode})`;
+        text.textContent = `Barcode: ${barcode}, Product: ${productName}`;
         
-        resultItem.appendChild(image);
-        resultItem.appendChild(text);
-        searchResults.appendChild(resultItem);
-        
-        resultItem.addEventListener("click", () => {
-            alert(`You selected ${productName} with barcode ${barcode}`);
-            // You can update this to show product details on click.
-        });
+        listItem.appendChild(image);
+        listItem.appendChild(text);
+        listElement.appendChild(listItem);
     }
 
-    // Start QR code scanning
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        onScanSuccess,
-        onScanError
-    ).then(() => {
-        console.log("QR Code scanning started successfully.");
-    }).catch(err => {
-        console.error("Failed to start QR Code scanning.", err);
-        resultElement.innerText = "Failed to start scanning.";
+    function saveToHistory(barcode, productName, imageUrl) {
+        const historyItem = document.createElement("li");
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = productName;
+        image.title = productName;
+        
+        const text = document.createElement("span");
+        text.textContent = `Scanned Barcode: ${barcode}, Product: ${productName}`;
+        
+        historyItem.appendChild(image);
+        historyItem.appendChild(text);
+        historyElement.appendChild(historyItem);
+    }
+
+    const html5QrCode = new Html5Qrcode("scanner-container");
+    
+    html5QrCode.start({ facingMode: "environment" }, {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+    }, onScanSuccess, onScanError)
+    .catch(err => {
+        console.error("Unable to start QR Code scanning.", err);
     });
 
-    // Toggle between scanner UI and search interface
-    searchIcon.addEventListener("click", () => {
-        const scannerUIVisible = scannerContainer.style.display !== "none";
-        
-        if (scannerUIVisible) {
-            scannerContainer.style.display = "none";
-            resultElement.style.display = "none";
-            searchInterface.style.display = "flex";
-        } else {
-            scannerContainer.style.display = "block";
-            resultElement.style.display = "block";
-            searchInterface.style.display = "none";
+    addToListButton.addEventListener("click", () => {
+        const productName = productNameInput.value.trim();
+        if (productName) {
+            addProductToList("N/A", productName, "https://via.placeholder.com/150");
+            productNameInput.value = ""; // Clear input field
         }
     });
 
-    // Search for products or barcodes
-    searchQueryInput.addEventListener("input", function() {
-        const query = searchQueryInput.value.trim();
-        if (query) {
-            searchResults.innerHTML = ""; // Clear previous results
-            fetchProductDetails(query); // Use the same function to fetch by barcode or name
+    searchBar.addEventListener("input", function() {
+        const filter = searchBar.value.toLowerCase();
+        const items = listElement.getElementsByTagName("li");
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const text = item.textContent || item.innerText;
+            item.style.display = text.toLowerCase().includes(filter) ? "" : "none";
         }
     });
 });
