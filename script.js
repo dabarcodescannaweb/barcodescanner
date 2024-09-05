@@ -12,18 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let lastScanTime = 0;
     const cooldownPeriod = 3000; // 3 seconds cooldown
 
-    // Firebase config
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const html5QrCode = new Html5Qrcode("scanner-container");
 
     function onScanSuccess(decodedText, decodedResult) {
         const now = Date.now();
@@ -100,14 +89,17 @@ document.addEventListener("DOMContentLoaded", function() {
         historyElement.appendChild(historyItem);
     }
 
-    const html5QrCode = new Html5Qrcode("scanner-container");
-    
-    html5QrCode.start({ facingMode: "environment" }, {
-        fps: 10,
-        qrbox: { width: 250, height: 250 }
-    }, onScanSuccess, onScanError)
-    .catch(err => {
-        console.error("Unable to start QR Code scanning.", err);
+    // Start QR code scanning
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onScanSuccess,
+        onScanError
+    ).then(() => {
+        console.log("QR Code scanning started successfully.");
+    }).catch(err => {
+        console.error("Failed to start QR Code scanning.", err);
+        resultElement.innerText = "Failed to start scanning. Check console for errors.";
     });
 
     addToListButton.addEventListener("click", () => {
