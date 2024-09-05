@@ -2,12 +2,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const scannerContainer = document.getElementById("scanner-container");
     const resultElement = document.getElementById("result");
     const overlay = document.getElementById("overlay");
-    const listElement = document.getElementById("list");
+    const searchIcon = document.getElementById("search-icon");
+    const searchInterface = document.getElementById("search-interface");
+    const searchResults = document.getElementById("search-results");
+    const searchQueryInput = document.getElementById("search-query");
     const searchBar = document.getElementById("search-bar");
-    const historyElement = document.getElementById("history");
-    const addToListButton = document.getElementById("add-to-list");
-    const productNameInput = document.getElementById("product-name");
-
+    
     let lastScannedBarcode = "";
     let lastScanTime = 0;
     const cooldownPeriod = 3000; // 3 seconds cooldown
@@ -47,10 +47,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     const product = data.product;
                     const productName = product.product_name || "Unknown Product";
                     const imageUrl = product.image_url || "https://via.placeholder.com/150";
-                    addProductToList(barcode, productName, imageUrl);
-                    saveToHistory(barcode, productName, imageUrl);
+                    addSearchResult(barcode, productName, imageUrl);
                 } else {
-                    resultElement.innerText = "Product not found in ADissapointmentCL's Database!";
+                    resultElement.innerText = "Product not found!";
                 }
             })
             .catch(error => {
@@ -59,34 +58,23 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     }
 
-    function addProductToList(barcode, productName, imageUrl) {
-        const listItem = document.createElement("li");
+    function addSearchResult(barcode, productName, imageUrl) {
+        const resultItem = document.createElement("li");
         const image = document.createElement("img");
         image.src = imageUrl;
         image.alt = productName;
-        image.title = productName;
         
         const text = document.createElement("span");
-        text.textContent = `Barcode: ${barcode}, Product: ${productName}`;
+        text.textContent = `${productName} (Barcode: ${barcode})`;
         
-        listItem.appendChild(image);
-        listItem.appendChild(text);
-        listElement.appendChild(listItem);
-    }
-
-    function saveToHistory(barcode, productName, imageUrl) {
-        const historyItem = document.createElement("li");
-        const image = document.createElement("img");
-        image.src = imageUrl;
-        image.alt = productName;
-        image.title = productName;
+        resultItem.appendChild(image);
+        resultItem.appendChild(text);
+        searchResults.appendChild(resultItem);
         
-        const text = document.createElement("span");
-        text.textContent = `Scanned Barcode: ${barcode}, Product: ${productName}`;
-        
-        historyItem.appendChild(image);
-        historyItem.appendChild(text);
-        historyElement.appendChild(historyItem);
+        resultItem.addEventListener("click", () => {
+            alert(`You selected ${productName} with barcode ${barcode}`);
+            // You can update this to show product details on click.
+        });
     }
 
     // Start QR code scanning
@@ -99,24 +87,30 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log("QR Code scanning started successfully.");
     }).catch(err => {
         console.error("Failed to start QR Code scanning.", err);
-        resultElement.innerText = "Failed to start scanning. Check console for errors.";
+        resultElement.innerText = "Failed to start scanning.";
     });
 
-    addToListButton.addEventListener("click", () => {
-        const productName = productNameInput.value.trim();
-        if (productName) {
-            addProductToList("N/A", productName, "https://via.placeholder.com/150");
-            productNameInput.value = ""; // Clear input field
+    // Toggle between scanner UI and search interface
+    searchIcon.addEventListener("click", () => {
+        const scannerUIVisible = scannerContainer.style.display !== "none";
+        
+        if (scannerUIVisible) {
+            scannerContainer.style.display = "none";
+            resultElement.style.display = "none";
+            searchInterface.style.display = "flex";
+        } else {
+            scannerContainer.style.display = "block";
+            resultElement.style.display = "block";
+            searchInterface.style.display = "none";
         }
     });
 
-    searchBar.addEventListener("input", function() {
-        const filter = searchBar.value.toLowerCase();
-        const items = listElement.getElementsByTagName("li");
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            const text = item.textContent || item.innerText;
-            item.style.display = text.toLowerCase().includes(filter) ? "" : "none";
+    // Search for products or barcodes
+    searchQueryInput.addEventListener("input", function() {
+        const query = searchQueryInput.value.trim();
+        if (query) {
+            searchResults.innerHTML = ""; // Clear previous results
+            fetchProductDetails(query); // Use the same function to fetch by barcode or name
         }
     });
 });
